@@ -6,8 +6,20 @@
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon" />
     <meta name="google" content="notranslate" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="console.mjs" type="module"></script>
     <script type="module">
+      import addConsoleSink from "./console.mjs";
+
+      // Example sink: mirror console output into the page.
+      const output = document.createElement("div");
+      output.id = "console";
+      document.body.appendChild(output);
+      addConsoleSink((level, message) => {
+        const p = document.createElement("p");
+        p.className = level;
+        p.appendChild(document.createTextNode(message));
+        output.appendChild(p);
+      });
+
       window.addEventListener("load", () => {
         let b = true
         let f = 1234.56789
@@ -89,9 +101,21 @@
 
         console.error("THIS IS AN ERROR!")
         console.error("THIS IS A SECOND ERROR!")
+
+        // Uncaught errors and unhandled promise rejections are captured too.
+        Promise.reject(new Error("Unhandled rejection test"))
+        setTimeout(() => { throw new Error("Uncaught error test") })
       });
     </script>
-    <style>body { background-color: #111; color: #ccc; margin: 32px; }</style>
+    <style>
+      body { background-color: #111; color: #ccc; margin: 32px; }
+      #console { font-family: Menlo, Monaco, monospace; white-space: pre-wrap; }
+      #console p { margin: 0 0 .5em; }
+      #console .debug { color: #789; }
+      #console .info { color: #8ac; }
+      #console .warn { color: #db7; }
+      #console .error { color: #e77; }
+    </style>
   </head>
   <body></body>
 </html>

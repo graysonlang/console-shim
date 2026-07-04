@@ -1,0 +1,44 @@
+{
+  "name": "@graysonlang/console-shim",
+  "version": "0.1.0",
+  "description": "Tee browser console output to pluggable sinks: Xcode via WKWebView, a logging backend, or the page itself.",
+  "type": "module",
+  "main": "console.mjs",
+  "types": "console.d.ts",
+  "exports": {
+    ".": {
+      "types": "./console.d.ts",
+      "default": "./console.mjs"
+    }
+  },
+  "files": [
+    "console.mjs",
+    "console.d.ts",
+    "dist/"
+  ],
+  "scripts": {
+    "build": "esbuild console.mjs --bundle --format=iife --global-name=ConsoleShim --outfile=dist/console-shim.iife.js",
+    "test": "node --test",
+    "prepack": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/graysonlang/console-shim.git"
+  },
+  "keywords": [
+    "console",
+    "logging",
+    "shim",
+    "tee",
+    "wkwebview",
+    "error-reporting"
+  ],
+  "author": "Grayson Lang <grayson.lang@gmail.com>",
+  "license": "Unlicense",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}
