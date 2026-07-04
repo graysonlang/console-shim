@@ -2,7 +2,7 @@
 
 Tee browser `console` output to anywhere — the Xcode console via WKWebView, a logging backend, or the page itself.
 
-Importing the module patches `console.assert` / `debug` / `error` / `info` / `log` / `warn` so that every call is:
+Importing the module patches `console.assert` / `debug` / `dir` / `error` / `info` / `log` / `trace` / `warn` so that every call is:
 
 1. formatted to a **plain string** (printf-style substitutions, cycle-safe object dumps — exactly what `postMessage` payloads and log ingestion want), and
 2. delivered to any number of registered **sinks**,
@@ -107,6 +107,8 @@ Note that browsers' own consoles **ignore** width and precision despite what som
 - `%f` — precision is digits after the decimal point for |x| ≥ 1. Implemented via `toPrecision`, so values below 1 keep significant figures instead of collapsing: `%.2f` of `0.001234` → `0.00123`, not `0.00`.
 - `%o` / `%O` — formatted object dump.
 - `%c` — the CSS argument is consumed and ignored.
+
+`console.dir(value)` dumps its first argument as an object with **no** format-string substitution (per spec), reported at the `"log"` level; the options argument is ignored. `console.trace(...)` emits the formatted label (or `console.trace`) followed by the call-site stack, at the `"log"` level. `console.assert(false, ...)` reports at the `"error"` level.
 
 ### Crash guards
 

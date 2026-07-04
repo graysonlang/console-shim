@@ -1,8 +1,8 @@
 // console-shim: tees browser console output to pluggable sinks.
 //
-// Importing this module patches console.assert/debug/error/info/log/warn so
-// that each call is formatted to a plain string and delivered to registered
-// sinks, while still forwarding to the original console. Uncaught errors and
+// Importing this module patches console.assert/debug/dir/error/info/log/trace/
+// warn so that each call is formatted to a plain string and delivered to
+// registered sinks, while still forwarding to the original console. Uncaught errors and
 // unhandled promise rejections are captured and delivered as "error" messages.
 //
 // Messages logged before the first sink is registered are buffered (up to
@@ -182,6 +182,8 @@ const _console = globalThis.console;
 const _original = {
   assert: _console.assert.bind(_console),
   debug: _console.debug.bind(_console),
+  dir: _console.dir.bind(_console),
+  trace: _console.trace.bind(_console),
   error: _console.error.bind(_console),
   info: _console.info.bind(_console),
   log: _console.log.bind(_console),
@@ -239,6 +241,26 @@ for (const level of ["debug", "error", "info", "log", "warn"]) {
     callOriginal(_original[level], args);
   };
 }
+// console.dir has different semantics: no format-string substitution — the
+// first argument is always dumped as an object (the options argument is ignored).
+_console.dir = function(...args) {
+  if (args.length) emit("log", formatObject(args[0]));
+  callOriginal(_original.dir, args);
+};
+function captureStack() {
+  const lines = (new Error().stack || "").split("\n");
+  // V8 prefixes stacks with an "Error" header line; JSC/Firefox do not. Skip
+  // it plus the frames for this helper and the patched console.trace itself,
+  // so the first frame reported is the caller.
+  const skip = lines[0] && lines[0].startsWith("Error") ? 3 : 2;
+  return lines.slice(skip).join("\n");
+}
+_console.trace = function(...args) {
+  const label = args.length ? formatForLogging(...args) : "console.trace";
+  const stack = captureStack();
+  emit("log", stack ? `${label}\n${stack}` : label);
+  callOriginal(_original.trace, args);
+};
 
 // Route uncaught errors and unhandled promise rejections to sinks.
 // (globalThis works in both window and worker contexts.)

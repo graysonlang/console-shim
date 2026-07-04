@@ -192,6 +192,35 @@ test("levels are reported", () => {
   assert.deepEqual(captured.map((c) => c.level), ["warn", "error", "info", "debug"]);
 });
 
+test("console.dir dumps the first argument without format substitution", () => {
+  captured.length = 0;
+  console.dir({ a: 1 });
+  console.dir("%d", 5); // no substitution: "%d" is the value being inspected
+  console.dir();        // nothing to dump: no emission
+  assert.deepEqual(captured, [
+    { level: "log", message: "{a: 1}" },
+    { level: "log", message: '"%d"' },
+  ]);
+});
+
+test("console.trace emits the formatted label and the call-site stack", () => {
+  captured.length = 0;
+  console.trace("checkpoint %d", 7);
+  assert.equal(captured.length, 1); // Node's original trace delegates to error; must not double-emit
+  const { level, message } = captured[0];
+  assert.equal(level, "log");
+  const [label, ...stack] = message.split("\n");
+  assert.equal(label, "checkpoint 7");
+  assert.ok(stack.length > 0);
+  assert.match(stack[0], /format\.test\.mjs/); // first frame is the caller, not the shim
+});
+
+test("console.trace with no arguments uses a default label", () => {
+  captured.length = 0;
+  console.trace();
+  assert.ok(captured[0].message.startsWith("console.trace\n"));
+});
+
 test("console.assert emits only on failure", () => {
   captured.length = 0;
   console.assert(true, "unseen");
